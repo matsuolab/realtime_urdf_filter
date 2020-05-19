@@ -101,7 +101,7 @@ install(DIRECTORY include/${PROJECT_NAME}/
   FILES_MATCHING PATTERN "*.h")
 
 install(FILES plugins/nodelet_plugins.xml
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
+  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/plugins)
 
 foreach(dir launch urdf include/shaders)
    install(DIRECTORY ${dir}/
