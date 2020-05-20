@@ -143,11 +143,12 @@ namespace realtime_urdf_filter
     {
       try
       {
+        tf_.waitForTransform (fixed_frame_, (*it)->name, timestamp, ros::Duration(0.3));
         tf_.lookupTransform (fixed_frame_, (*it)->name, timestamp, t);
       }
       catch (tf::TransformException ex)
       {
-        ROS_ERROR("%s",ex.what());
+        ROS_ERROR_THROTTLE(3, "%s",ex.what());
       }
       (*it)->link_to_fixed = tf::Transform (t.getRotation (), t.getOrigin ());
     }
