@@ -11,3 +11,4 @@ models:
 depth_distance_threshold: 0.05
 show_gui: false
 filter_replace_value: 5.0
+tf_lookup_timeout: 0.3

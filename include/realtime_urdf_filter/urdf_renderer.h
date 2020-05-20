@@ -44,7 +44,7 @@ namespace realtime_urdf_filter
 class URDFRenderer
 { 
   public:
-    URDFRenderer (std::string model_description, std::string tf_prefix, std::string cam_frame, std::string fixed_frame, tf::TransformListener &tf);
+    URDFRenderer (std::string model_description, std::string tf_prefix, std::string cam_frame, std::string fixed_frame, tf::TransformListener &tf, ros::Duration tf_lookup_timeout);
     void render(ros::Time timestamp = ros::Time());
 
   protected:
@@ -64,6 +64,9 @@ class URDFRenderer
     // rendering stuff 
     std::vector<std::shared_ptr<Renderable> > renderables_;
     tf::TransformListener &tf_;
+
+    // transform lookup timeout
+    ros::Duration tf_lookup_timeout_;
 };
 
 } // end namespace

@@ -105,7 +105,13 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
   filter_replace_value_ = (double)v;
   ROS_INFO ("using filter replace value %f", filter_replace_value_);
 
-  // setup publishers 
+  // transform lookup timeout
+  nh_.getParam ("tf_lookup_timeout", v);
+  ROS_ASSERT (v.getType() == XmlRpc::XmlRpcValue::TypeDouble && "need a tf_lookup_timeout paramter!");
+  tf_lookup_timeout_ = ros::Duration((double)v);
+  ROS_INFO ("using transform lookup timeout %lf", tf_lookup_timeout_.toSec());
+
+  // setup publishers
   depth_sub_ = image_transport_.subscribeCamera("input_depth", 10,
       &RealtimeURDFFilter::filter_callback, this);
   depth_pub_ = image_transport_.advertiseCamera("output_depth", 10);
@@ -160,7 +166,7 @@ void RealtimeURDFFilter::loadModels ()
 
       // finally, set the model description so we can later parse it.
       ROS_INFO ("Loading URDF model: %s", description_param.c_str ());
-      renderers_.push_back (new URDFRenderer (content, tf_prefix, cam_frame_, fixed_frame_, tf_));
+      renderers_.push_back (new URDFRenderer (content, tf_prefix, cam_frame_, fixed_frame_, tf_, tf_lookup_timeout_));
     }
   }
   else
@@ -492,6 +498,7 @@ void RealtimeURDFFilter::render (const double* camera_projection_matrix, ros::Ti
   // get transformation from camera to "fixed frame"
   tf::StampedTransform camera_transform;
   try {
+    tf_.waitForTransform (cam_frame_, fixed_frame_, timestamp, tf_lookup_timeout_);
     tf_.lookupTransform (cam_frame_, fixed_frame_, timestamp, camera_transform);
     ROS_DEBUG_STREAM("Camera to world translation "<<
         cam_frame_<<" -> "<<fixed_frame_<<

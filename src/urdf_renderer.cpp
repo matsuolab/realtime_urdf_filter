@@ -45,12 +45,14 @@ namespace realtime_urdf_filter
                               std::string tf_prefix,
                               std::string cam_frame,
                               std::string fixed_frame,
-                              tf::TransformListener &tf)
+                              tf::TransformListener &tf,
+                              ros::Duration tf_lookup_timeout)
     : model_description_(model_description)
     , tf_prefix_(tf_prefix)
     , camera_frame_ (cam_frame)
     , fixed_frame_(fixed_frame)
     , tf_(tf)
+    , tf_lookup_timeout_(tf_lookup_timeout)
   {
     initURDFModel ();
   }
@@ -143,6 +145,7 @@ namespace realtime_urdf_filter
     {
       try
       {
+        tf_.waitForTransform (fixed_frame_, (*it)->name, timestamp, tf_lookup_timeout_);
         tf_.lookupTransform (fixed_frame_, (*it)->name, timestamp, t);
       }
       catch (tf::TransformException ex)

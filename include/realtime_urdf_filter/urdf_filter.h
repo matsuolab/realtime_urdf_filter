@@ -140,6 +140,9 @@ class RealtimeURDFFilter
     // output from rendering
     GLfloat* masked_depth_;
     GLubyte* mask_;
+
+    // transform lookup timeout
+    ros::Duration tf_lookup_timeout_;
 };
 
 } // end namespace
