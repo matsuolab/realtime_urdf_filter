@@ -106,9 +106,12 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
   ROS_INFO ("using filter replace value %f", filter_replace_value_);
 
   // transform lookup timeout
+  v.clear();
   nh_.getParam ("tf_lookup_timeout", v);
-  ROS_ASSERT (v.getType() == XmlRpc::XmlRpcValue::TypeDouble && "need a tf_lookup_timeout paramter!");
-  tf_lookup_timeout_ = ros::Duration((double)v);
+  if (v.getType() == XmlRpc::XmlRpcValue::TypeDouble)
+      tf_lookup_timeout_ = ros::Duration((double)v);
+  else
+      tf_lookup_timeout_ = ros::Duration(0.3);
   ROS_INFO ("using transform lookup timeout %lf", tf_lookup_timeout_.toSec());
 
   // setup publishers
