@@ -114,8 +114,8 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
 
 RealtimeURDFFilter::~RealtimeURDFFilter ()
 {
-  delete masked_depth_;
-  delete mask_;
+  free(masked_depth_);
+  free(mask_);
 }
 
 // loads URDF models
