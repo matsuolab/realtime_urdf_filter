@@ -113,7 +113,10 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
 }
 
 RealtimeURDFFilter::~RealtimeURDFFilter ()
-{}
+{
+    mask_.release();
+    masked_depth_.release();
+}
 
 // loads URDF models
 void RealtimeURDFFilter::loadModels ()
