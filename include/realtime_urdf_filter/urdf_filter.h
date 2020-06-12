@@ -89,7 +89,7 @@ class RealtimeURDFFilter
     void render (const double* camera_projection_matrix, ros::Time timestamp = ros::Time());
 
     GLfloat* getMaskedDepth()
-      {return masked_depth_;}
+      {return (GLfloat*)masked_depth_.ptr();}
     
   public:
     // ROS objects
@@ -138,8 +138,8 @@ class RealtimeURDFFilter
     char **argv_;
 
     // output from rendering
-    GLfloat* masked_depth_;
-    GLubyte* mask_;
+    cv::Mat masked_depth_;
+    cv::Mat mask_;
 };
 
 } // end namespace

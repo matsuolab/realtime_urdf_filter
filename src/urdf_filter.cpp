@@ -113,10 +113,7 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
 }
 
 RealtimeURDFFilter::~RealtimeURDFFilter ()
-{
-  free(masked_depth_);
-  free(mask_);
-}
+{}
 
 // loads URDF models
 void RealtimeURDFFilter::loadModels ()
@@ -278,9 +275,10 @@ void RealtimeURDFFilter::filter_callback
   // publish processed depth image and image mask
   if (depth_pub_.getNumSubscribers() > 0)
   {
-    cv::Mat masked_depth_image (height_, width_, CV_32FC1, masked_depth_);
+    cv::Mat masked_depth_image = masked_depth_;
     if(ros_depth_image->encoding == sensor_msgs::image_encodings::TYPE_16UC1)
     {
+      masked_depth_image = masked_depth_.clone();
       masked_depth_image.convertTo(masked_depth_image, CV_16U, 1000.0);
     }
 
@@ -293,11 +291,10 @@ void RealtimeURDFFilter::filter_callback
 
   if (mask_pub_.getNumSubscribers() > 0)
   {
-    cv::Mat mask_image (height_, width_, CV_8UC1, mask_);
     cv_bridge::CvImage out_mask;
     out_mask.header = ros_depth_image->header;
     out_mask.encoding = sensor_msgs::image_encodings::MONO8;
-    out_mask.image = mask_image;
+    out_mask.image = mask_;
     mask_pub_.publish (out_mask.toImageMsg (), camera_info);
   }
 }
@@ -402,10 +399,10 @@ void RealtimeURDFFilter::initGL ()
     ROS_INFO_STREAM("Loaded "<<renderers_.size()<<" models for filtering.");
   }
   
-  // Alocate buffer for the masked depth image (float) 
-  masked_depth_ = (GLfloat*) malloc(width_ * height_ * sizeof(GLfloat));
-  // Alocate buffer for the mask (uchar) 
-  mask_ = (GLubyte*) malloc(width_ * height_ * sizeof(GLubyte));
+  // Alocate buffer for the masked depth image (float)
+  masked_depth_ = cv::Mat(height_, width_, CV_32FC1);
+  // Alocate buffer for the mask (uchar)
+  mask_ = cv::Mat(height_, width_, CV_8UC1);
 }
 
 // set up FBO
@@ -701,11 +698,11 @@ void RealtimeURDFFilter::render (const double* camera_projection_matrix, ros::Ti
   } 
 
   fbo_->bind(1);
-  glGetTexImage (fbo_->getTextureTarget(), 0, GL_RED, GL_FLOAT, masked_depth_);
+  glGetTexImage (fbo_->getTextureTarget(), 0, GL_RED, GL_FLOAT, (GLfloat*)masked_depth_.ptr());
   if (need_mask_)
   {
     fbo_->bind(3);
-    glGetTexImage (fbo_->getTextureTarget(), 0, GL_RED, GL_UNSIGNED_BYTE, mask_);
+    glGetTexImage (fbo_->getTextureTarget(), 0, GL_RED, GL_UNSIGNED_BYTE, (GLubyte*)mask_.ptr());
   }
 
   // Ok, finished with all OpenGL, let's swap!
