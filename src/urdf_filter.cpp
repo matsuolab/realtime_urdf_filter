@@ -51,6 +51,8 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
   , far_plane_ (8)
   , near_plane_ (0.1)
   , argc_ (argc), argv_(argv)
+  , mask_(nullptr)
+  , masked_depth_(nullptr)
 {
   // get fixed frame name
   XmlRpc::XmlRpcValue v;
@@ -114,8 +116,14 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
 
 RealtimeURDFFilter::~RealtimeURDFFilter ()
 {
-  free(masked_depth_);
-  free(mask_);
+  if (masked_depth_)
+  {
+    free(masked_depth_);
+  }
+  if (mask_)
+  {
+    free(mask_);
+  }
 }
 
 // loads URDF models
@@ -401,10 +409,19 @@ void RealtimeURDFFilter::initGL ()
   } else {
     ROS_INFO_STREAM("Loaded "<<renderers_.size()<<" models for filtering.");
   }
-  
-  // Alocate buffer for the masked depth image (float) 
+
+  if (masked_depth_)
+  {
+    free(masked_depth_);
+  }
+  if (mask_)
+  {
+    free(mask_);
+  }
+
+  // Alocate buffer for the masked depth image (float)
   masked_depth_ = (GLfloat*) malloc(width_ * height_ * sizeof(GLfloat));
-  // Alocate buffer for the mask (uchar) 
+  // Alocate buffer for the mask (uchar)
   mask_ = (GLubyte*) malloc(width_ * height_ * sizeof(GLubyte));
 }
 
