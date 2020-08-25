@@ -368,10 +368,8 @@ void RealtimeURDFFilter::initGL ()
 {
   static bool gl_initialized = false;
 
-  ROS_INFO("Initializing OpenGL subsystem...");
-
   if (!gl_initialized) {
-    // Initialize GLUT
+    ROS_INFO("Initializing GLUT...");
     glutInit (&argc_, argv_);
 
     //TODO: change this to use an offscreen pbuffer, so no window is necessary,
@@ -390,16 +388,17 @@ void RealtimeURDFFilter::initGL ()
     gl_initialized = true;
   }
 
-  // initialize OpenGL Extension Wrangler library
+  ROS_INFO("Initializing GLEW...");
   GLenum err = glewInit();
   if (GLEW_OK != err) {
     throw std::runtime_error("ERROR: could not initialize GLEW!");
   }
 
-  // Set up FBO 
+  ROS_INFO("Initializing FrameBufferObject...");
   // FIXME: Replace this with more robust / specialized FBO
   this->initFrameBufferObject();
 
+  ROS_INFO("Loading models...");
   // Load URDF models + meshes onto GPU
   this->loadModels();
 
@@ -423,6 +422,8 @@ void RealtimeURDFFilter::initGL ()
   masked_depth_ = (GLfloat*) malloc(width_ * height_ * sizeof(GLfloat));
   // Alocate buffer for the mask (uchar)
   mask_ = (GLubyte*) malloc(width_ * height_ * sizeof(GLubyte));
+
+  ROS_INFO("URDF filter set up");
 }
 
 // set up FBO
