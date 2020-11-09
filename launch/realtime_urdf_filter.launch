@@ -1,29 +1,82 @@
+<?xml version="1.0"?>
+
 <launch>
-  <arg name="nodelet" default="false"/>
+  <arg name="nodelet" default="true"/>
 
   <!-- Launch nodelet -->
-  <node if="$(arg nodelet)" pkg="nodelet" type="nodelet" name="realtime_urtf_filter_nodelet" args="load realtime_urdf_filter/RealtimeURDFFilterNodelet camera_nodelet_manager" output="screen">
-    <remap from="~input_depth" to="/camera/depth_registered/image_rect"/>
-    <remap from="~output_depth" to="/camera/depth_registered_filtered/image_rect" />
-    <remap from="~output_mask" to="/urdf_filtered_mask" />
+   <node if="$(arg nodelet)" pkg="nodelet" type="nodelet" name="realtime_urtf_filter_nodelet_back" args="load realtime_urdf_filter/RealtimeURDFFilterNodelet /back_rgbd_cam/back_rgbd_cam_nodelet_manager" output="screen">
+    <remap from="~input_depth" to="/back_rgbd_cam/depth/image_raw"/>
+    <remap from="~output_depth" to="/back_rgbd_cam/depth/image_filtered" />
+    <remap from="~output_mask" to="/urdf_filtered_mask_back" />
 
-    <rosparam command="load" file="$(find realtime_urdf_filter)/launch/filter_parameters.yaml"/>
-  </node>                 
+    <rosparam command="load" file="$(find realtime_urdf_filter)/launch/filter_parameters_back.yaml"/>
+  </node>  
 
+   <node if="$(arg nodelet)" pkg="nodelet" type="nodelet" name="realtime_urtf_filter_nodelet_front" args="load realtime_urdf_filter/RealtimeURDFFilterNodelet /front_rgbd_cam/front_rgbd_cam_nodelet_manager" output="screen">
+    <remap from="~input_depth" to="/front_rgbd_cam/depth/image_raw"/>
+    <remap from="~output_depth" to="/front_rgbd_cam/depth/image_filtered" />
+    <remap from="~output_mask" to="/urdf_filtered_mask_front" />
+
+    <rosparam command="load" file="$(find realtime_urdf_filter)/launch/filter_parameters_front.yaml"/>
+  </node>               
+
+  <!-- Lauch node -->
   <node unless="$(arg nodelet)" 
     pkg="realtime_urdf_filter" type="realtime_urdf_filter" name="$(anon realtime_urdf_filter)" output="screen">
-    <remap from="~input_depth" to="/camera/depth_registered/image_rect"/>
-    <remap from="~output_depth" to="/camera/depth_registered_filtered/image_rect" />
+    <remap from="~input_depth" to="/image_rgbd_depth_fused"/>
+    <remap from="~output_depth" to="/image_rgbd_depth_fused_filtered" />
     <remap from="~output_mask" to="/urdf_filtered_mask" />
 
     <rosparam command="load" file="$(find realtime_urdf_filter)/launch/filter_parameters.yaml"/>
   </node>                 
 
   <!-- Load an example URDF -->
-  <param name="robot_description" command="$(find xacro)/xacro.py '$(find realtime_urdf_filter)/urdf/example.urdf.xml'"/>
+  <!--param name="robot_description_test" command="$(find xacro)/xacro.py '$(find realtime_urdf_filter)/urdf/asterix_ugv.urdf.xml'"/>
+  <param name="robot_description_test_2" command="$(find xacro)/xacro.py '$(find realtime_urdf_filter)/urdf/asterix_ugv_flipper.urdf.xml'"/-->
 
-  <node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
+  <!-- node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher">
     <param name="tf_prefix" value="EXAMPLE"/>
+  </node -->
+
+
+
+  <!-- nodelets to convert depth image to point cloud -->
+  <node pkg="nodelet" type="nodelet" name="nodelet_manager" args="manager" />
+
+  <node pkg="nodelet" type="nodelet" name="back_rgbd_depth_filtered_to_point_cloud"
+        args="load depth_image_proc/point_cloud_xyz nodelet_manager">
+    <remap from="camera_info" to="/back_rgbd_cam/depth/camera_info"/>
+    <remap from="image_rect" to="/back_rgbd_cam/depth/image_filtered"/>
+    <remap from="points" to="/back_rgbd_cam/depth/points_filtered"/>
   </node>
+
+  <node pkg="nodelet" type="nodelet" name="front_rgbd_depth_filtered_to_point_cloud"
+        args="load depth_image_proc/point_cloud_xyz nodelet_manager">
+    <remap from="camera_info" to="/front_rgbd_cam/depth/camera_info"/>
+    <remap from="image_rect" to="/front_rgbd_cam/depth/image_filtered"/>
+    <remap from="points" to="/front_rgbd_cam/depth/points_filtered"/>
+  </node>
+
+  <!-- nodes for merged rgbd topic -->
+  <node pkg="topic_tools" type="relay" name="front_rgbd_cam_depth_filtered_points_relay" args="/front_rgbd_cam/depth/points_filtered /cloud_rgbd_depth_filtered_fused">
+     <param name="lazy" value="true"/>
+  </node>
+  
+  <node pkg="topic_tools" type="relay" name="back_rgbd_cam_depth_filtered_points_relay" args="/back_rgbd_cam/depth/points_filtered /cloud_rgbd_depth_filtered_fused">
+     <param name="lazy" value="true"/>
+  </node>
+
+  <!-- Crop Z around robot -->
+  <!-- node pkg="nodelet" type="nodelet" name="scan_z_filter_rgbd_filtered" output="screen" respawn="false" args="standalone pcl/PassThrough">
+      <param name="filter_field_name" value="z"/>
+      <param name="filter_limit_min" value="-1"/>
+      <param name="filter_limit_max" value="1.5"/>
+      <param name="input_frame" value="base_stabilized"/>
+      <remap from="~input" to="/cloud_rgbd_depth_filtered_fused"/>
+      <remap from="~output" to="/cloud_rgbd_depth_filtered_fused_cropped"/>
+  </node -->
+
+
+
 </launch>
 
