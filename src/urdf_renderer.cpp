@@ -93,43 +93,55 @@ namespace realtime_urdf_filter
   /** \brief Processes a single URDF link, creates renderable for it */
   void URDFRenderer::process_link (std::shared_ptr<urdf::Link> link)
   {
-    if (link->visual.get() == NULL || link->visual->geometry.get() == NULL)
+    if (link->collision.get() == NULL || link->collision->geometry.get() == NULL)
       return;
 
-    std::shared_ptr<Renderable> r;
-    if (link->visual->geometry->type == urdf::Geometry::BOX)
+    for (auto it = std::begin(link->collision_array); it != std::end(link->collision_array); ++it)
     {
-      std::shared_ptr<urdf::Box> box = std::dynamic_pointer_cast<urdf::Box> (link->visual->geometry);
-      r.reset (new RenderableBox (box->dim.x, box->dim.y, box->dim.z));
+        urdf::CollisionSharedPtr local_collision = *it;
+        //ROS_INFO("name of local visual material %s", local_visual->material_name.c_str());
+
+        std::shared_ptr<Renderable> r;
+
+        if (local_collision->geometry->type == urdf::Geometry::BOX)
+        {
+            std::shared_ptr<urdf::Box> box = std::dynamic_pointer_cast<urdf::Box> (local_collision->geometry);
+            r.reset (new RenderableBox (1.2*(box->dim.x), 1.2*(box->dim.y), 1.2*(box->dim.z)));
+            ROS_INFO("processing Box");
+        }
+        else if (local_collision->geometry->type == urdf::Geometry::CYLINDER)
+        {
+            std::shared_ptr<urdf::Cylinder> cylinder = std::dynamic_pointer_cast<urdf::Cylinder> (local_collision->geometry);
+            r.reset (new RenderableCylinder (1.2*(cylinder->radius), 1.2*(cylinder->length)));
+            ROS_INFO("processing Cylinder");
+        }
+        else if (local_collision->geometry->type == urdf::Geometry::SPHERE)
+        {
+            std::shared_ptr<urdf::Sphere> sphere = std::dynamic_pointer_cast<urdf::Sphere> (local_collision->geometry);
+            r.reset (new RenderableSphere (1.2*(sphere->radius)));
+        }
+        else if (local_collision->geometry->type == urdf::Geometry::MESH)
+        {
+            std::shared_ptr<urdf::Mesh> mesh = std::dynamic_pointer_cast<urdf::Mesh> (local_collision->geometry);
+            std::string meshname (mesh->filename);
+            RenderableMesh* rm = new RenderableMesh (meshname);
+            rm->setScale (mesh->scale.x, mesh->scale.y, mesh->scale.z);
+            r.reset (rm);
+        }
+
+        r->setLinkName (tf_prefix_+ "/" + link->name);
+        urdf::Vector3 origin = local_collision->origin.position;
+        urdf::Rotation rotation = local_collision->origin.rotation;
+        r->link_offset = tf::Transform (
+                tf::Quaternion (rotation.x, rotation.y, rotation.z, rotation.w).normalize (),
+                tf::Vector3 (origin.x, origin.y, origin.z));
+        if (link->visual &&
+            (link->visual->material))
+            r->color  = link->visual->material->color;
+        renderables_.push_back (r);
+        ROS_INFO("renderable name: %s", r->name.c_str());
+        //ROS_INFO("renderables_ size: %d", renderables_.size());
     }
-    else if (link->visual->geometry->type == urdf::Geometry::CYLINDER)
-    {
-      std::shared_ptr<urdf::Cylinder> cylinder = std::dynamic_pointer_cast<urdf::Cylinder> (link->visual->geometry);
-      r.reset (new RenderableCylinder (cylinder->radius, cylinder->length));
-    }
-    else if (link->visual->geometry->type == urdf::Geometry::SPHERE)
-    {
-      std::shared_ptr<urdf::Sphere> sphere = std::dynamic_pointer_cast<urdf::Sphere> (link->visual->geometry);
-      r.reset (new RenderableSphere (sphere->radius));
-    }
-    else if (link->visual->geometry->type == urdf::Geometry::MESH)
-    {
-      std::shared_ptr<urdf::Mesh> mesh = std::dynamic_pointer_cast<urdf::Mesh> (link->visual->geometry);
-      std::string meshname (mesh->filename);
-      RenderableMesh* rm = new RenderableMesh (meshname);
-      rm->setScale (mesh->scale.x, mesh->scale.y, mesh->scale.z);
-      r.reset (rm);
-    }
-    r->setLinkName (tf_prefix_+ "/" + link->name);
-    urdf::Vector3 origin = link->visual->origin.position;
-    urdf::Rotation rotation = link->visual->origin.rotation;
-    r->link_offset = tf::Transform (
-        tf::Quaternion (rotation.x, rotation.y, rotation.z, rotation.w).normalize (),
-        tf::Vector3 (origin.x, origin.y, origin.z));
-    if (link->visual && 
-        (link->visual->material))
-      r->color  = link->visual->material->color;
-    renderables_.push_back (r); 
   }
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -162,7 +174,11 @@ namespace realtime_urdf_filter
       
     std::vector<std::shared_ptr<Renderable> >::const_iterator it = renderables_.begin ();
     for (; it != renderables_.end (); it++)
-      (*it)->render ();
+    {
+        (*it)->render ();
+        //ROS_INFO("rendering part %s", (*it)->name.c_str());
+    }
+
   }
 
 }
