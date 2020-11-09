@@ -93,7 +93,7 @@ namespace realtime_urdf_filter
   {
     applyTransform ();
     glTranslatef (0, 0, -length/2);
-    //glutSolidCylinder(radius, length, 10, 10);
+    glutSolidCylinder(radius, length, 10, 10);
     unapplyTransform ();
   }
 
