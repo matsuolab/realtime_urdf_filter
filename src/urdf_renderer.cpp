@@ -99,7 +99,6 @@ namespace realtime_urdf_filter
     for (auto it = std::begin(link->collision_array); it != std::end(link->collision_array); ++it)
     {
         urdf::CollisionSharedPtr local_collision = *it;
-        //ROS_INFO("name of local visual material %s", local_visual->material_name.c_str());
 
         std::shared_ptr<Renderable> r;
 
@@ -107,13 +106,11 @@ namespace realtime_urdf_filter
         {
             std::shared_ptr<urdf::Box> box = std::dynamic_pointer_cast<urdf::Box> (local_collision->geometry);
             r.reset (new RenderableBox (1.2*(box->dim.x), 1.2*(box->dim.y), 1.2*(box->dim.z)));
-            ROS_INFO("processing Box");
         }
         else if (local_collision->geometry->type == urdf::Geometry::CYLINDER)
         {
             std::shared_ptr<urdf::Cylinder> cylinder = std::dynamic_pointer_cast<urdf::Cylinder> (local_collision->geometry);
             r.reset (new RenderableCylinder (1.2*(cylinder->radius), 1.2*(cylinder->length)));
-            ROS_INFO("processing Cylinder");
         }
         else if (local_collision->geometry->type == urdf::Geometry::SPHERE)
         {
@@ -139,8 +136,6 @@ namespace realtime_urdf_filter
             (link->visual->material))
             r->color  = link->visual->material->color;
         renderables_.push_back (r);
-        ROS_INFO("renderable name: %s", r->name.c_str());
-        //ROS_INFO("renderables_ size: %d", renderables_.size());
     }
   }
 
