@@ -105,17 +105,17 @@ namespace realtime_urdf_filter
         if (local_collision->geometry->type == urdf::Geometry::BOX)
         {
             std::shared_ptr<urdf::Box> box = std::dynamic_pointer_cast<urdf::Box> (local_collision->geometry);
-            r.reset (new RenderableBox (1.2*(box->dim.x), 1.2*(box->dim.y), 1.2*(box->dim.z)));
+            r.reset (new RenderableBox (1.45*(box->dim.x), 1.45*(box->dim.y), 1.45*(box->dim.z)));
         }
         else if (local_collision->geometry->type == urdf::Geometry::CYLINDER)
         {
             std::shared_ptr<urdf::Cylinder> cylinder = std::dynamic_pointer_cast<urdf::Cylinder> (local_collision->geometry);
-            r.reset (new RenderableCylinder (1.2*(cylinder->radius), 1.2*(cylinder->length)));
+            r.reset (new RenderableCylinder (1.45*(cylinder->radius), 1.45*(cylinder->length)));
         }
         else if (local_collision->geometry->type == urdf::Geometry::SPHERE)
         {
             std::shared_ptr<urdf::Sphere> sphere = std::dynamic_pointer_cast<urdf::Sphere> (local_collision->geometry);
-            r.reset (new RenderableSphere (1.2*(sphere->radius)));
+            r.reset (new RenderableSphere (1.45*(sphere->radius)));
         }
         else if (local_collision->geometry->type == urdf::Geometry::MESH)
         {
