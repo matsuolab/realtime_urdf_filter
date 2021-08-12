@@ -31,6 +31,7 @@
 #ifndef REALTIME_URDF_FILTER_URDF_FILTER_H_
 #define REALTIME_URDF_FILTER_URDF_FILTER_H_
 
+#include <ros/ros.h>
 #include <ros/node_handle.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/CameraInfo.h>
@@ -38,6 +39,10 @@
 
 #include <opencv2/opencv.hpp>
 #include <image_transport/image_transport.h>
+
+#include <message_filters/subscriber.h>
+#include <message_filters/synchronizer.h>
+#include <message_filters/sync_policies/approximate_time.h>
 
 #include "realtime_urdf_filter/FrameBufferObject.h"
 #include "realtime_urdf_filter/shader_wrapper.h"
@@ -99,6 +104,13 @@ class RealtimeURDFFilter
     image_transport::CameraSubscriber depth_sub_;
     image_transport::CameraPublisher depth_pub_;
     image_transport::CameraPublisher mask_pub_;
+
+    typedef message_filters::sync_policies::ApproximateTime<sensor_msgs::Image, sensor_msgs::CameraInfo> SyncPolicy;
+
+    message_filters::Subscriber<sensor_msgs::Image> depth_sub;
+    message_filters::Subscriber<sensor_msgs::CameraInfo> camera_info_sub;
+    message_filters::Synchronizer<SyncPolicy> depth_camera_sync;
+    
 
     // rendering objects
     FramebufferObject *fbo_;

@@ -33,6 +33,8 @@
 #include <cv_bridge/cv_bridge.h>
 #include <image_transport/image_transport.h>
 #include <sensor_msgs/image_encodings.h>
+
+
 // #define USE_OWN_CALIBRATION
 
 using namespace realtime_urdf_filter;
@@ -53,6 +55,9 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
   , argc_ (argc), argv_(argv)
   , mask_(nullptr)
   , masked_depth_(nullptr)
+  , depth_sub(nh, "input_depth", 10)
+  , camera_info_sub(nh, "camera_info", 10)
+  , depth_camera_sync(SyncPolicy(10), depth_sub, camera_info_sub)
 {
   // get fixed frame name
   XmlRpc::XmlRpcValue v;
@@ -108,8 +113,9 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
   ROS_INFO ("using filter replace value %f", filter_replace_value_);
 
   // setup publishers 
-  depth_sub_ = image_transport_.subscribeCamera("input_depth", 10,
-      &RealtimeURDFFilter::filter_callback, this);
+  /*depth_sub_ = image_transport_.subscribeCamera("input_depth", 10,
+      &RealtimeURDFFilter::filter_callback, this);*/
+  depth_camera_sync.registerCallback(boost::bind(&RealtimeURDFFilter::filter_callback, this, _1, _2));
   depth_pub_ = image_transport_.advertiseCamera("output_depth", 10);
   mask_pub_ = image_transport_.advertiseCamera("output_mask", 10);
 }
