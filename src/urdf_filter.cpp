@@ -57,7 +57,7 @@ RealtimeURDFFilter::RealtimeURDFFilter (ros::NodeHandle &nh, int argc, char **ar
   , masked_depth_(nullptr)
   , depth_sub(nh, "input_depth", 10)
   , camera_info_sub(nh, "camera_info", 10)
-  , depth_camera_sync(SyncPolicy(10), depth_sub, camera_info_sub)
+  , depth_camera_sync(SyncPolicy(50), depth_sub, camera_info_sub)
 {
   // get fixed frame name
   XmlRpc::XmlRpcValue v;
